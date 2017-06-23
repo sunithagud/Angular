@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html >
+  <head>
+    <meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AngularJS Data insert into database</title>
+    
+    <link rel="stylesheet" href="style.css" />
+     <script src="js/angular.min.js"></script>
+    <script src="js/ui-bootstrap-tpls-1.3.3.js"></script>
+	<style>
+	.clear{clear:both;}
+	</style>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+	
+	<link rel="stylesheet" href="css/dataTables.bootstrap.min.css" />
+  </head>
+<body ng-app="myapp">
+<div class="container"  ng-controller="studentcontroller">
+	<div class="row col-md-6 col-md-offset-3">
+		<form class="form-group">
+		<div class="form-group">
+			<input type="hidden" name="sno" ng-model="sno"/><br/>
+		</div>
+		<div class="form-group">
+			<label  for="Enter Name">Enter Name:</label>
+			<input class="form-control" type="text" name="name" ng-model="name"/>
+		</div>
+
+		<div class="form-group">	
+			<label  for="Enter Course">Enter Course:</label> 
+			<input class="form-control" type="text" name="course" ng-model="course"/>
+		</div>
+		
+		<div class="form-group">
+			<input ng-show="!editmode" type="submit" class="btn btn-primary" name="btnInsert" value="Save" ng-click="insertData()"/>
+
+			<input ng-show="editmode" type="submit" class="btn btn-success" name="btnInsert" value="Update" ng-click="updateData()"/>
+		</div> 
+		</form>
+	</div>
+	<div class="clear"></div>
+
+<div class="row col-md-8 col-md-offset-2" ng-show="!editmode">
+<hr>
+<table class="table table-striped table-bordered" id="example" cellspacing="0" width="100%">
+			
+                <thead>
+                    <tr>
+                        <th>id</th>
+                        <th>name</th>
+                        <th>course</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="students in std">
+                        <td>{{students.sno}}</td>
+                        <td>{{students.name}}</td>
+                        <td>{{students.course}}</td>
+                        <td><a ng-click="editData(students.sno)"><span class="glyphicon glyphicon-edit" aria-hidden="true"></span></a> &nbsp;
+						<a ng-click="deleteData(students.sno)"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></a></td>
+                    </tr>
+                </tbody>
+            </table>
+			</div>
+
+</div>
+<script>
+
+   var app = angular.module('myapp',['ui.bootstrap']);
+   app.controller('studentcontroller',function($scope,$http){ 
+  
+       $scope.insertData=function(){    
+           $http.post("php/insert.php", {
+			  'sno':$scope.sno,
+				'name':$scope.name,
+				'course':$scope.course
+			}).then(function(response){
+                   console.log(response);
+				   $http.get("php/getvalues.php").success(function(data) {			   
+						$scope.std = data;
+					});
+               },function(error){
+                   alert("Sorry! Data Couldn't be inserted!");
+                   console.error(error);
+
+               });
+           }  
+		//edit the data
+		$scope.editData = function(sno){
+			$http.get('php/editedata.php?sno=' + sno).success(function(data){
+			
+				$scope.stds = data;
+				$scope.editmode=true;
+				$scope.sno=data.sno;
+				$scope.name=data.name;
+				$scope.course=data.course;
+				
+				
+			});
+		}
+		//Update the Data
+		
+		$scope.updateData=function(){
+			$http.put("php/updatedata.php", {
+                'sno':$scope.sno,
+				'name':$scope.name,
+				'course':$scope.course
+           }).then(function(response){
+                   console.log("success");
+				   $scope.name="";
+				   $scope.course="";
+				   $http.get("php/getvalues.php").success(function(data) {			   
+						$scope.editmode = false;
+						$scope.std = data;
+					});
+               },function(error){
+                   alert("Sorry! Data Couldn't be inserted!");
+                   console.error(error);
+
+               });
+          }
+          //delete data
+		
+		$scope.deleteData=function(sno){
+		$http.delete('php/deletedata.php?sno=' + sno).then(function(response){
+					console.log("delete is successfuly complete");
+					$http.get("getvalues.php").success(function(data) {			   
+						$scope.std = data;
+					});
+				},function(error){
+                   alert("Sorry! Data Couldn't be inserted!");
+                   console.error(error);
+               });
+		}
+		
+		  
+		$http.get("php/getvalues.php").success(function(data) {				   
+			$scope.std = data;
+		});
+		   
+       });
+</script>
+
+</body>
+</html>
